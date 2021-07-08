@@ -1,2 +1,2 @@
-CollateSearch::Engine.routes.draw do
+Searchable::Engine.routes.draw do
 end
