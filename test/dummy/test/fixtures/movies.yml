@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+1:
+  title: "Star Wars: Episode IV - A New Hope"
+  summary: "Luke Skywalker joins forces with a Jedi Knight, a cocky pilot, a Wookiee and two droids to save the galaxy from the Empire's world-destroying battle station, while also attempting to rescue Princess Leia from the evil Darth Vader."
+  rental_price: 123.25
+
+2:
+  title: "Indiana Jones and the Last Crusade"
+  summary: "In 1938, after his father Professor Henry Jones, Sr. goes missing while pursuing the Holy Grail, Indiana Jones finds himself up against Adolf Hitler's Nazis again to stop them obtaining its powers."
+  rental_price: 85.47
+
+3:
+  title: "Witness"
+  summary: "A young Amish boy is sole witness to a murder; policeman John Book goes into hiding in Amish country to protect him until the trial."
+  rental_price: 25.05
+
+4:
+  title: "Inception"
+  summary: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO."
+  rental_price: 95.85

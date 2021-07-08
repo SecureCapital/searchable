@@ -1,0 +1,61 @@
+<%
+  stripper = Proc.new{|string| string.strip.downcase.gsub(/[^\w\s]/,'').gsub(/\s+/,'_')}
+
+  Movie.all.each do |mv|
+    title = stripper.call(mv.title)
+    instance_variable_set("@#{title}", mv.id)
+  end
+
+  Actor.all.each do |act|
+    name = stripper.call(act.name)
+    instance_variable_set("@#{name}", act.id)
+  end
+%>
+1:
+  movie_id: <%= @star_wars_episode_iv_a_new_hope %>
+  actor_id: <%= @harrison_ford %>
+  name: 'Han Solo'
+2:
+  movie_id: <%= @star_wars_episode_iv_a_new_hope %>
+  actor_id: <%= @mark_hamil %>
+  name: 'Luke Skywalker'
+3:
+  movie_id: <%= @star_wars_episode_iv_a_new_hope %>
+  actor_id: <%= @carrie_frances_fisher %>
+  name: 'Princess Leia'
+4:
+  movie_id: <%= @indiana_jones_and_the_last_crusade %>
+  actor_id: <%= @harrison_ford%>
+  name: 'Indiana Jones'
+5:
+  movie_id: <%= @indiana_jones_and_the_last_crusade %>
+  actor_id: <%= @sean_connery %>
+  name: 'Professor Henry Jones'
+6:
+  movie_id: <%= @indiana_jones_and_the_last_crusade %>
+  actor_id: <%= @denholm_elliot %>
+  name: 'Marcus Brody'
+7:
+  movie_id: <%= @witness %>
+  actor_id: <%= @harrison_ford %>
+  name: 'John Book'
+8:
+  movie_id: <%= @witness %>
+  actor_id: <%= @kelly_mcgillis %>
+  name: 'Rachel'
+9:
+  movie_id: <%= @witness %>
+  actor_id: <%= @josef_summer %>
+  name: 'Schaeffer'
+10:
+  movie_id: <%= @inception %>
+  actor_id: <%= @leonardo_dicaprio %>
+  name: 'Cobb'
+11:
+  movie_id: <%= @inception %>
+  actor_id: <%= @joseph_gordonlevit %>
+  name: 'Arthur'
+12:
+  movie_id: <%= @inception %>
+  actor_id: <%= @ellen_page %>
+  name: 'Ariande'

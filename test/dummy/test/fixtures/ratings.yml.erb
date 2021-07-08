@@ -1,0 +1,15 @@
+<%
+  ids = Movie.pluck(:id)
+  counter = 0
+  ids.each do |movie_id|
+%>
+  <% rand(100..500).times do %>
+    <%
+      counter += 1
+      rating = rand(0..10)
+    %>
+fix_<%=counter%>:
+  movie_id: <%=movie_id%>
+  rate: <%=rating%>
+  <% end %>
+<% end %>
