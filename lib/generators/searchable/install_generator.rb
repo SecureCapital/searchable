@@ -12,6 +12,14 @@ module Searchable
       template 'install_migration.rb', "#{migration_path}_create_searchable_indices.rb", migration_version: migration_version
     end
 
+    def update_sidekiq_config
+      puts "Would you like to configure sidekiq? (y/n)"
+      response = gets.chomp
+      if ((/\s*yes\s*/i) =~ response) || ((/\s*y\s*/i) =~ response)
+        generate "searchable:sidekiq_config"
+      end
+    end
+
     def print_status
       puts "Created install migration. Run `rails db:migrate` to install the table `searchable_indices`."
     end
