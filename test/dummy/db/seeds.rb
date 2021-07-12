@@ -1,4 +1,3 @@
-ENV["RAILS_ENV"] = "test"
 FIXTURES_FOLDER = Rails.root.to_s+'/test/fixtures/'
 
 # Clean up database
@@ -6,7 +5,7 @@ puts "######"
 puts "CLEANING UP DATABASE!"
 
 puts "Deleting records"
-[Movie, Actor, Character, Rating].each do |klass|
+[Movie, Actor, Character, Rating, Searchable::Index].each do |klass|
   puts "Deleting #{klass.name}: #{klass.delete_all}"
   ActiveRecord::Base.connection.execute("ALTER TABLE `#{klass.table_name}` AUTO_INCREMENT = 1;")
 end
@@ -34,3 +33,4 @@ Rating.create(ratings)
 puts "Created #{Rating.count} ratings"
 
 puts "######"
+puts "Searchable::Index.count => #{Searchable::Index.count}"

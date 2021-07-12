@@ -1,0 +1,5 @@
+---
+:queues:
+- searchable
+:limits:
+  searchable: 2
