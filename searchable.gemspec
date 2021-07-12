@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.version     = Searchable::VERSION
   spec.authors     = ["MadsJaeger"]
   spec.email       = ["madshjaeger@sgmail.com"]
-  spec.homepage    = "https://www.github.com/MadsJaeger/searchableable"
+  spec.homepage    = "https://www.github.com/MadsJaeger/serchable"
   spec.summary     = "Indexing active records for searching and query interface to active record"
   spec.description = "The developer will get full control on the searchble string per record, which will be stored into `searchble_indices`. A querry interface is provided turning a json arguments into complex queries eleverging acrive records qurying methods."
   spec.license     = "MIT"
@@ -21,5 +21,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
 
   spec.add_dependency "rails", "~> 6.1.3", ">= 6.1.3.2"
+  spec.add_dependency "sidekiq", "~> 6.2", ">= 6.2.1"
+  spec.add_dependency "sidekiq-symbols", "=0.2.0"
   spec.add_development_dependency "pry"
 end
