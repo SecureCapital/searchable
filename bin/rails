@@ -11,6 +11,14 @@ ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../Gemfile', __dir__)
 require "bundler/setup" if File.exist?(ENV["BUNDLE_GEMFILE"])
 
 require "rails"
+
+env_path = File.expand_path('../_env_variables.yml', __dir__)
+if File.exists?(env_path)
+  YAML.load_file(env_path).each do |k,v|
+    ENV[k] = v
+  end
+end
+
 # Pick the frameworks you want:
 require "active_model/railtie"
 require "active_job/railtie"
