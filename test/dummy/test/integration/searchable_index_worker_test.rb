@@ -19,11 +19,12 @@ class SearchableIndexWorkerTest < ActiveSupport::TestCase #ActionDispatch::Integ
     assert @siw.set_searchable
   end
 
-  test "searchable index worker can set callback data" do
-    characters = @movie.characters
-    assert_equal @siw.set_searchable_on_callback, characters
-  end
-
+  # async
+  # test "searchable index worker can set callback data" do
+  #   characters = @movie.characters
+  #   assert_equal @siw.set_searchable_on_callback, characters
+  # end
+  
   test "searchable index worker kan perform" do
     assert @siw.perform(call: :set_searchable)
   end

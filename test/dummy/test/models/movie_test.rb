@@ -106,13 +106,16 @@ class MovieTest < ActiveSupport::TestCase
     assert_not @movie.searchable_should_change?
     @movie.rental_price += 1
     assert @movie.rental_price_changed?
-    assert_not @movie.searchable_should_change?
+    update = @movie.searchable_index.updated_at
+    @movie.save
+    assert @movie.saved_change_to_rental_price?
+    assert_equal @movie.searchable_index.updated_at, update
     @movie.title = 'Star Wars - the rampage of Walt Disney'
     assert @movie.title_changed?
     assert_not @movie.searchable_should_change?
     update = @movie.searchable_index.updated_at
     assert @movie.save
-    assert (@movie.searchable_index.searchable =~ /Star Wars \- the rampage of Walt Disney.*/i) == 0
+    assert (@movie.searchable_index.searchable =~ /Star Wars rampage Walt Disney.*/i) == 0
   end
 
   test "Will save searchable on create" do
