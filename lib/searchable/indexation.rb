@@ -17,7 +17,7 @@ module Searchable
     end
 
     def searchable
-      return atributes['searchable'] if attributes['searchable']
+      return attributes['searchable'] if attributes['searchable']
       si = searchable_index || build_searchable_index
       set_searchable unless si.searchable
       si.searchable
@@ -52,7 +52,7 @@ module Searchable
 
     def save_searchable_sync
       set_searchable
-      searchable_index.save(touch: false)
+      searchable_index.save
       save_searchable_callbacks_sync
       true
     end
@@ -152,6 +152,17 @@ module Searchable
         has_one :searchable_index, as: :owner, :dependent => :delete, class_name: 'Searchable::Index'
         after_save :save_searchable
         after_destroy :save_searchable_callbacks
+      end
+
+      def index_all_searchable(of: 50)
+        if searchable_indexed?
+          includes(*searchable_callbacks).includes(:searchable_index).in_batches(of: of).each do |batch|
+            batch.each do |record|
+              record.set_searchable
+              record.searchable_index.save
+            end
+          end
+        end
       end
 
       def searchable_columns

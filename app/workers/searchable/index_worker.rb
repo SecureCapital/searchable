@@ -16,10 +16,8 @@ module Searchable
 
     def set_searchable
       if @id && @klass && item
-        puts item.class.name
-        puts item.id
-        puts item.set_searchable
-        puts item.searchable_index.save
+        item.set_searchable
+        item.searchable_index.save
       end
     end
 
@@ -35,6 +33,18 @@ module Searchable
 
     def item
       @item ||= @klass.constantize.find_by(id: @id)
+    end
+
+    def index_klass
+      if @klass
+        klass.constantize.index_all_searchable
+      end
+    end
+
+    def index_klasses
+      Searchable::Index.indexed_models.each do |model|
+        self.class.perform_async(klass: model.name, call: 'index_klass')
+      end
     end
   end
 end
