@@ -2,7 +2,7 @@ module Searchable
   class Index < ApplicationRecord
     extend Searchable::Indexation::ClassMethods
     @@indexed_models = []
-    belongs_to :owner, :polymorphic => true, touch: :updated_at
+    belongs_to :owner, :polymorphic => true 
     validates :owner_id, :owner_type, presence: true, allow_nil: false, allow_blank: false
     validates :owner_id, uniqueness: { scope: :owner_type }, :on => :create
     # Only validate uniqueness on create, change can violate the uniqueness but
@@ -10,6 +10,8 @@ module Searchable
     # time on update. SI shpould be maintained rom the model, thus the change of
     # owner os unlikely.
     validates :searchable, presence: true, allow_blank: false
+    before_save :limit_searchable
+    after_save :touch_owner
 
     def set_searchable_with(search_string, **kwargs, &block)
       if search_string.is_a? Array
@@ -17,8 +19,8 @@ module Searchable
       else
         self.searchable = search_string
       end
-      kwargs.each do |key|
-        send(key) if kwargs[key] && respond_to?(key)
+      kwargs.each do |key,bool|
+        send(key) if bool && respond_to?(key)
       end
       strippers.each{|meth| send(meth)} if kwargs[:compress]
       self[:searchable] = yield self[:searchable] if block_given?
@@ -75,8 +77,15 @@ module Searchable
     end
     ##
 
-    def touch(*fields, **kwargs, &block)
-      super(*fields, **kwargs, &block) if owner.class.searchable_touch_on_indexation
+    def touch_owner
+      if saved_changes? && owner_type.constantize.searchable_touch_on_indexation?
+        owner.update_attribute(:updated_at, updated_at)
+      end
+    end
+
+    def limit_searchable
+      limit = self.class.columns_hash.find{|field,addapter| field=='searchable'}.last.limit
+      attributes['searchable']=attributes['searchable'][0..(limit-1)]
     end
 
     class << self
