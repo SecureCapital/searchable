@@ -154,7 +154,7 @@ module Searchable
         @searchable_watch_fields = watch_fields
         @searchable_save_async = save_async
         @searchable_touch_on_indexation = touch_on_indexation
-        @indexation_inclusions = indexation_inclusions
+        @searchable_indexation_inclusions = indexation_inclusions
         Searchable::Index.indexed_models << self
         has_one :searchable_index, as: :owner, :dependent => :delete, class_name: 'Searchable::Index'
         after_save :save_searchable
