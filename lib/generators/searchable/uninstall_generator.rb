@@ -5,7 +5,7 @@ require_relative 'install_mixin.rb'
 module Searchable
   class UninstallGenerator < Rails::Generators::Base
     include InstallMixin
-    desc "Uninstalling serchable: adds miration to remove searchable_indices"
+    desc "Uninstalling searchable: adds miration to remove searchable_indices"
     source_root File.expand_path("../templates/", __FILE__)
 
     def create_migration

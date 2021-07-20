@@ -1,6 +1,4 @@
-## [Unreleased]
-
-## [1.0.0] - 2021-07-07
+## [0.5.0] - 2021-07-20
 
 - Initial release
 - Alpha version

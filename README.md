@@ -1,7 +1,10 @@
 # Searchable
-The purpose of searchable Rails plugin is to provide a direct Ruby implementation of indexing ActiveRecords as searchable. The indexation is highly configurable, easy to manage, and it is possible to let the index contain information of related data, making it easier for the user to find the needle in the haystack. On top of searchable a query interface is provided wrapping the awesome Rails querying features, making it simple to form queries of intermediate complexity. The QI has been build in order to DRY up controller index actions, providing a single line call for all the wherem ordering, tagging and search arguments.
+The Rails plugin searchable provides Ruby implementation of indexing ActiveRecords as searchable. The indexation is highly configurable, easy to manage, and it is possible to let the index contain information of related data, making it easier for the user to find the needle in the haystack. On top of searchable a query interface is provided wrapping the awesome Rails querying features, making it simple to form queries of intermediate complexity. The QI has been build in order to DRY up controller index actions, providing a single line call wrapping all the `where`,`order`, `tagging` and `search` arguments.
 
-**NOTICE!** inside the *extensions* folder the ruby classes Hash, Date, and DateInfinity are extended, this may impact your application. Do not use this gem before you understand the impact of the extensions to your application. Also, ensure to make tests when applying the query interface if you deliver restricted data, such that your test will indentify any data leak..
+**NOTICE!** inside the *extensions* folder the ruby classes `Hash`, `Date`, and `DateInfinity` are extended, this may impact your application. Do not use this gem before you understand the impact of the extensions to your application. Also, if you deliver data restricted to some users and apply the query interface in these controllers, ensure to make appropriate tests to assert that you still deliver the right data.
+
+## Requirements
+Current version has implemented async indexation via Sidekiq and Redis; if you are not using Sidekiq you have some work ahead. To use another job backend you could contribute to the gem or just add your own worker, and override the method `Searchable::Indexation#save_searchable_async`. Test has been done using a MySQL database, compatibility to other databases has not been tested.
 
 ## Installation
 Add to your Gemfile:
@@ -28,13 +31,13 @@ $ rails db:migrate
 ```
 
 ## Usage
-The gem is grouped into two `Searchable` and `Searchable::QueryInterface`, the former grants search methods and indexation of active records, the latter provides a wrapper of searchable and the rails query interface to generate rather sophisticated queries from JSON parameters and santation rules. The search indexations is stored in the model `Searchable::Index < ApplicationRecord` containing a searchable string in the column `searchable`; joining onto the index grants the ability to search on custom generated search strings per record. The usage is explained below; firstly the appliance in your ApplicationRecords, searching your models, sanitizing queries, and building query responses in your controllers.
+The gem is grouped into two `Searchable` and `Searchable::QueryInterface`, the former grants search methods and indexation of active records, the latter provides a wrapper of searchable and the rails query interface to generate rather sophisticated queries from JSON parameters and sanitation rules. The indexations are stored in the model `Searchable::Index < ApplicationRecord` containing a searchable string in the column `searchable`; joining onto the index grants the ability to search on custom generated search strings per record. The usage is explained below; firstly the appliance in your ApplicationRecords, searching your models, sanitizing queries, and lastly building query responses in your controllers.
 
 ### Indexation
 Start by indexing the models, by adding to your code as:
 
 ```ruby
-#/app/models/movie.rb
+# /app/models/movie.rb
 class Movie < ApplicationReord
   has_many :characters, :dependent => :destroy
   has_many :actors, :through => :characters
@@ -57,12 +60,12 @@ Including `Searchable::Indexation` should only be done along calling `index_as_s
 
 | Option          | Type  | Description |
 |-----------------|-------|-------------|
-| `:watch_fields` | Array | Array of methods/fields on the model that are used in indexation. Changes to these should be watched for. When a watched field changes the searchable value (`searchable_index.searchable`) will be updated. Each field specified should have method like `saved_change_to_#{field}` in order to let searchable know tha re-indexation should take place. |
+| `:watch_fields` | Array | Array of methods/fields on the model that are used in indexation. Changes to these should be watched for. When a watched field changes the searchable value (`searchable_index.searchable`) will be updated. Each field specified should have method like `saved_change_to_#{field}` in order to let searchable know that re-indexation should take place. |
 | `:save_async`   | Boolean | Whether to save `searchable_index` async after save or synchronously along save. Use the latency configuration to set the delay of indexation. Prefer async if the response to an update does not require sending the updated search string along the record. |
 | `:touch_on_indexation` | Boolean | Whether or not an update on `searchable_index` should fire touch (i.e. update) on `updated_at` on its owner. |
 | `:callbacks` | Array | Array of methods that also are indexed as searchable and relates to the model, and should be re-indexed after change. |
 
-The method `generate_searchable` is provided in the `Indexation` module but it is recommended to override it with a custom implementation of what data tha should be stored into the searchable string. `generate_searchable` should return either an array of strings (nil is accepted) or a string. The afterwords parsing data into `Searchable::Index` is called with:
+The method `generate_searchable` is provided in the `Indexation` module but it is recommended to override it with a custom implementation of what data that should be stored into the searchable string. `generate_searchable` should return either an array of strings (nil is accepted) or a string. The afterwords parsing data into `Searchable::Index` is called with:
 
 ```ruby
 # Searchable::Indexation
@@ -78,16 +81,16 @@ def set_searchable
 end
 ```
 
-`set_searchable` may be overridden to customize the compression behaviour on the string. If the generated value is rather large contains numbers, html, symbols etc. would probably want som compression, i.e. reduction of the string. Compression will obscure the contents from the original, which may offend users with a great memory, who will no longer be able to finde records with exact matches to the original string. Thus if searchable data is rather limited you might avoid compression. Providing `generate_searchable` method as above now saves movies with the names of the related characters and actors. The user may now search for a famous actor on movies and get a list of all movies featuring the actor. The `generate_searchable` method is manually linked to `watch_fields` such that a change on title or summary should re-index. The callbacks are set as to `:actors` and `:characters` when both models are `indexed_as_searchable`, and their generation includes data from the movie model. Omitting callbacks like this will leave the `Searchable::Index` inconsistent to the underlying data. To re-index all records run
+`set_searchable` may be overridden to customize the compression behaviour. If the generated value is rather large contains numbers, html, symbols etc. you probably want some reduction of the string. Compression will obscure the contents from the original data, which may offend users with a great memory who will no longer be able to find records with exact match to the original string. Thus, if searchable data is rather limited you might want to avoid compression. Providing `generate_searchable` method as above now saves movies with the names of the related characters and actors. The user may now search for a famous actor on movies and get a list of all movies featuring the actor. The `generate_searchable` method is manually linked to `watch_fields` such that a change on title or summary should re-index. The callbacks are set to `:actors` and `:characters` when both models are `indexed_as_searchable`, and their generation includes data from the movie model. Omitting callbacks like this will leave the `Searchable::Index` inconsistent to the underlying data. To re-index all records run:
 
 ```ruby
 Movie.index_all_searchable
-# Or to index all index all models async
+# Or to index all models async
 Searchable::IndexWorker.perform_async(call: :index_klasses)
 ```
 #### Take notice to touch_on_indexation
 
-Setting `touch_on_indexation` to true will hit `updated_at` on your records when the searchable values changes. If Mark Hamil should change his name, all movies starring Mark Hamil will be re-indexed and its `updated_at` flag changed despite that the movie has not changed. Thus setting `touch_on_indexation` to `true` couples the searchable index close with the real data, and in that way its related data. You should not use `thouch_of_indexation` when it is crucial that your `updated_at` flag does not change when related data change.
+Setting `touch_on_indexation` to `true` will hit `updated_at` on your records when the searchable values changes. If Mark Hamil should change his name, all movies starring Mark Hamil will be re-indexed and its `updated_at` flag changed despite none of the movies changed. Thus setting `touch_on_indexation` to `true` couples the searchable index close with the parent data, and in that way its related data. You should not use `thouch_of_indexation` when it is crucial that your `updated_at` flag does not change unless the owner change.
 
 ### Searching
 As a models has been indexed it can be searched, simply call:
@@ -98,7 +101,7 @@ Movie.joins(:actors).search(title: 'star wars', 'actors.name': 'harrison').disti
   Movie Load (1.2ms)  SELECT DISTINCT `movies`.* FROM `movies` INNER JOIN `characters` ON `characters`.`movie_id` = `movies`.`id` INNER JOIN `actors` ON `actors`.`id` = `characters`.`actor_id` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE '%star%wars%') OR (actors.name COLLATE UTF8MB4_GENERAL_CI LIKE '%harrison%'))
 => ["Star Wars: Episode IV - A New Hope", "Indiana Jones and the Last Crusade", "Witness"]
 
-# Search for movies titles 'star wars' and starring 'DiCaprio'
+# Search for movies titled 'star wars' and starring 'DiCaprio'
 Movie.joins(:actors).search(title: 'star wars', 'actors.name': 'DiCaprio', join: 'AND').count(:all)
    (1.0ms)  SELECT COUNT(*) FROM `movies` INNER JOIN `characters` ON `characters`.`movie_id` = `movies`.`id` INNER JOIN `actors` ON `actors`.`id` = `characters`.`actor_id` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE '%star%wars%') AND (actors.name COLLATE UTF8MB4_GENERAL_CI LIKE '%DiCaprio%'))
 => 0
@@ -108,12 +111,12 @@ Movie.with_searchable.search(searchable: 'DiCaprio').map(&:searchable)
  Movie Load (0.5ms)  SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%DiCaprio%'))
 => ["inception thief who steals corporate secrets through use dream-sharing technology given inverse task planting idea into mind ceo. cobb arthur ariande leonardo dicaprio joseph gordon-levit ellen page"]
 
-# Search for movies having a tilte starting with star
+# Search for movies having a title starting with star
 Movie.search(title: 'star%', fuzzy: false).to_sql
 => "SELECT `movies`.* FROM `movies` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE 'star%'))"
 ```
 
-To search a model without indexing it as searchable you may extend `Searchable::Indexation::ClassMethods`. The model `Searchable::Index` can be searched without beeing indexed:
+To search a model without indexing it as searchable you may extend `Searchable::Indexation::ClassMethods`. The model `Searchable::Index` can be searched without being indexed:
 
 ```ruby
 Searchable::Index.search(searchable: '%harrison ford%', fuzzy: false).pluck(:owner_type,:owner_id)
@@ -121,11 +124,11 @@ Searchable::Index.search(searchable: '%harrison ford%', fuzzy: false).pluck(:own
 => [["Movie", 1], ["Movie", 2], ["Movie", 3], ["Actor", 1], ["Actor", 6], ["Actor", 7], ["Character", 1], ["Character", 4], ["Character", 7]]
 ```
 
-This allows you to 'fuzzy' search all indexed models. The search methods takes following arguments:
+This allows you to 'fuzzy' search all indexed models. The search method takes following arguments:
 
 | Argument       | Type    | Default | Description |
 |----------------|---------|---------|-------------|
-| `**kwargs`     | Hash    | {}      | Field search string mapping |
+| `**kwargs`     | Hash    | {}      | Field and search string mapping |
 | `:join`        | String  | 'OR'    | 'OR'/'AND', value to join each argument with |
 | ':fuzzy'       | Boolean | true    | When true, strings are prepended and appended with '%' and each space is replaced with '%', putting as many wildcards in the search as possible, otherwise no wildcards are added. |
 | `:with_having` | Boolean | false   | Use having(...) rather then where(...) |
@@ -170,24 +173,26 @@ conditions:
   call:
     "where(params[:where]).where.not(params[:where_not]).or(model.where(params[:or]).where.not(params[:or_not]))"
   description:
-    'Common where conditions. The user may only place conditions on fields given in the _filters rule. The sanitizer will try to convert the received values to the set type in the ruleset. Failure to convert will raise an exception. Unpermitted fields will be ignored and not raise an exception. If the user is not permitted to collect all records, which has been implemented with a where(...) query, it is essential to disallow `or` and `or_not` params as these will grant access to the unpermitted data.'
+    'Common where conditions. The user may only place conditions on fields given in the _filters rule. The sanitizer will try to convert the received values to type defined in the ruleset. Failure to convert will raise an exception. disallowed fields will be ignored and not raise an exception. If the user is not permitted to collect all records, which has been implemented with a where(...) query, it is essential to disallow `or` and `or_not` params as these will grant access to the disallowed data.'
 
 fields:
   params:
-    fields: 'Array of srings'
+    fields: 'Array of strings'
   rules:
     _allowed_fields: 'Array of permitted fields to select'
     _required_fields: 'Array of fields that will be included disregarding the params.'
   call:
-    select(fields)
+    "select(params[:fields])"
   description:
-    'Useful for reducing the amount of data or collecting associated data. Trying to fetch unpermitted fields do not raise an exception.'
+    'Useful for reducing the amount of data or collecting associated data. Trying to fetch disallowed fields do not raise an exception.'
 
 order:
   params:
     order: "Hash of field names and ASC/DESC"
   rules:
     _allowed_ordering: "Array of fields that may be ordered on"
+  call:
+    "order(params[:order])"
 
 pagination:
   params:
@@ -197,14 +202,14 @@ pagination:
   rules:
     _max_limit: 'integer'
   call:
-    limit(limit).offset(offset)
+    "limit(params[:limit]).offset(params[:offset])"
   description:
-    'For restricting amount of records collected and server sided pagination. The user may set both offset and page, but one is sufficient.'
+    'For restricting amount of records collected and server sided pagination. The user may set both offset and page, but one is sufficient. Setting page automatically defines the offset.'
 
 search:
   params:
     search:
-      fuzzy: Boolean
+      fuzzy: 'Boolean'
       join: 'AND/OR'
       kwargs: "a set of fields and search strings"
   rules:
@@ -214,7 +219,7 @@ search:
   call:
     'search(**kwargs, join: join, fuzzy: fuzzy)'
   description:
-    "See searching above. Note that data is flat, thus field_names fuzzy, join, and with_having may never be searched!"
+    "See searching above. Note that data is flat, thus field_names fuzzy, join, and with_having may never be searched! searching with {default: 'string'} will be converted to {_default_search_field => 'string'}."
 
 tagging:
   params:
@@ -224,16 +229,14 @@ tagging:
     match_all: 'Boolean, should match all tags'
     exclude: 'Boolean should exclude the tags'
   rules:
-    _allowed_tags_on: 'Array of strings, "columens" that the user may search tags on'
+    _allowed_tags_on: 'Array of strings, "columns" that the user may search tags on'
   call:
     'tagged(...)'
   description:
     "See the gem acts as taggable"
 ```
 
-Sanitation will raise errors when data cannot be converted to the expected, and sometimes when the user disobeys the rules. An exception tells the user that the query is incompatible, which is better than leaving the user in bliss and delivering unexpected data. By default is Sanitation nonrestrictive, but may be reconfigured.
-
-To sanitize call:
+Sanitation will raise errors when data cannot be converted to the expected, and sometimes when the user disobeys the rules. An exception tells the user that the query is incompatible, which is better than leaving the user in bliss and delivering unexpected data. By default is Sanitation nonrestrictive, but may be reconfigured. An example of sanitation id given below:
 
 ```ruby
 params = {
@@ -293,7 +296,7 @@ Searchable::QueryInterface::Sanitizers.sanitize!(params, rules)
 => {...}
 ```
 
-The rules should be exposed to the user, so he can form valid queries. Restrictions on fields, ordering, search fields etc. is useful to inform the user on what would work. Placing no restrictions allows the user to form queries on fields not available which may raise an exception.
+The rules should be exposed to the user, so she can form valid queries. Restrictions on fields, ordering, search fields etc. is useful to inform the user on what would work. Placing no restrictions allows the user to form queries on fields not available which may raise an exception. Notice that if the developer fails to set a compatible set of rules the default rules will apply, setting no restrictions (unless otherwise configured).
 
 #### ControllerMethods
 
@@ -351,11 +354,10 @@ SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM `movie
 }
 ```
 
-The results include pagination to let the user know how many times she should repeat the request to collect all results.
-
+The result hash includes pagination to let the user know how many times she should repeat the request to collect all results.
 
 ### Configuration
-To configure searchable see `searchable.rb` and `searchable/query_interface.rb` for predefined options.
+To configure searchable see `searchable.rb` and `searchable/query_interface.rb` for predefined options. Example of configuration is given below:
 
 ```ruby
 # config/initializers/searchable.rb
@@ -364,7 +366,7 @@ Searchable.configure do |config|
   config.collate_function = "UTF8_BIN"
   coinfig.locale = "fr" # Database locale, what language data is written in
   fill_words_fr = %w(oui)
-  searchable_limit = 65535 # use standard text limit on searchable_indices.searchbale
+  searchable_limit = 65535 # use standard text limit on searchable_indices.searchbale, set this before generating installation
 end
 
 Searchable::QueryInterface.configure do |config|
@@ -383,7 +385,7 @@ Testing this gem is done in two: 1) a test of code not directly linked to a host
 $ rails test
 ```
 
-To test in context of the a host application ensure your password to your root MySQL database is set in (or not if blank):
+To test in context of the a host application ensure your password to your root MySQL database is set (or not if blank):
 
 ```yml
 # `/_env_variables.yml`
@@ -396,7 +398,7 @@ Go to `/test/dummy` and prepare the database and start testing:
 # /test/dummy
 $ rails db:drop RAILS_ENV=test
 $ rails db:create RAILS_ENV=test
-$ db:migrate RAILS_ENV=test
+$ rails db:migrate RAILS_ENV=test
 $ rails db:seed RAILS_ENV=test
 $ rails test
 ```
@@ -413,7 +415,7 @@ Testing is all done whilst setting indexation synchronously; the `IndexWorker` h
 - Ensure that any params not abiding the rules will raise an error
 - Ensure implementation invariant to database
 - Figure a way to resolve with_having
-- Maybe remove extensions into searchable, and insantiate `Searchable::Date`, `Searchable::Hash` ...
+- Maybe remove extensions; place them in searchable and instantiate `Searchable::Date`, `Searchable::Hash` ...
 
 ## Contributing
 Contact the author if you desire to contribute.

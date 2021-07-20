@@ -4,10 +4,10 @@ Gem::Specification.new do |spec|
   spec.name        = "searchable"
   spec.version     = Searchable::VERSION
   spec.authors     = ["MadsJaeger"]
-  spec.email       = ["madshjaeger@sgmail.com"]
-  spec.homepage    = "https://www.github.com/MadsJaeger/serchable"
-  spec.summary     = "Indexing active records for searching and query interface to active record"
-  spec.description = "The developer will get full control on the searchble string per record, which will be stored into `searchble_indices`. A querry interface is provided turning a json arguments into complex queries eleverging acrive records qurying methods."
+  spec.email       = ["mhh@securespectrum.dk"]
+  spec.homepage    = "https://www.github.com/MadsJaeger/searchable"
+  spec.summary     = "Indexing active records as searchable and query interface to active record"
+  spec.description = "The developer will get full control on the searchble string per record, which will be stored into `searchble_indices`. A querry interface is provided turning a json arguments into complex queries leveraging active records qurying methods."
   spec.license     = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
