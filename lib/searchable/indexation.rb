@@ -118,7 +118,9 @@ module Searchable
     end
 
     module ClassMethods
-      attr_writer :searchable_touch_on_indexation, :searchable_indexed, :searchable_watch_fields, :searchable_callbacks, :searchable_save_async
+      attr_writer :searchable_touch_on_indexation, :searchable_indexed,
+        :searchable_watch_fields, :searchable_callbacks, :searchable_save_async,
+        :searchable_indexation_inclusions
 
       def searchable_touch_on_indexation?
         return false if @searchable_touch_on_indexation==false
@@ -142,6 +144,10 @@ module Searchable
         @searchable_save_async||true
       end
 
+      def searchable_indexation_inclusions
+        @searchable_indexation_inclusions
+      end
+
       def index_as_searchable(watch_fields: [], save_async: true, touch_on_indexation: true, callbacks: [])
         @searchable_indexed = true
         @searchable_callbacks = callbacks
@@ -156,7 +162,8 @@ module Searchable
 
       def index_all_searchable(of: 50)
         if searchable_indexed?
-          includes(*searchable_callbacks).includes(:searchable_index).in_batches(of: of).each do |batch|
+          includers = [:searchable_index]||(searchable_indexation_inclusions||searchable_callbacks)
+          includes(*includers).in_batches(of: of).each do |batch|
             batch.each do |record|
               record.set_searchable
               record.searchable_index.save

@@ -13,3 +13,7 @@
     + Sanitizers, accepting ad modifying params
     + Builder, producting SQL  queries
     + ControllerMethods, wrap sanitation anf building
+
+## [0.5.01] - 2021-07-20
+
+- Added searchable_indexation_inclusions on indexation for configuring method index_all_searchable

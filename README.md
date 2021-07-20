@@ -450,6 +450,7 @@ Testing is all done whilst setting indexation synchronously; the `IndexWorker` h
 - Ensure implementation invariant to database
 - Figure a way to resolve with_having
 - Maybe remove extensions; place them in searchable and instantiate `Searchable::Date`, `Searchable::Hash` ...
+- Make code validator identifying inconsistencies in indexation between the models
 
 ## Contributing
 Contact the author if you desire to contribute.
