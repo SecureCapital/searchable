@@ -2,7 +2,7 @@ module Searchable
   class Index < ApplicationRecord
     extend Searchable::Indexation::ClassMethods
     @@indexed_models = []
-    belongs_to :owner, :polymorphic => true 
+    belongs_to :owner, :polymorphic => true
     validates :owner_id, :owner_type, presence: true, allow_nil: false, allow_blank: false
     validates :owner_id, uniqueness: { scope: :owner_type }, :on => :create
     # Only validate uniqueness on create, change can violate the uniqueness but
@@ -28,7 +28,7 @@ module Searchable
     end
 
     def searchable=(string)
-      self[:searchable] = string.to_s.strip.gsub(/\s+/,' ').downcase
+      self[:searchable] = string.to_s.strip.gsub(/\s+/,' ')
     end
 
     def searchable_array
@@ -44,8 +44,12 @@ module Searchable
       methods.select{|meth| meth=~/^strip_\w+$/}
     end
 
+    def strip_downcase
+      self[:searchable] = searchable.downcase
+    end
+
     def strip_html
-      self.searchable = ActionController::Base.helpers.strip_tags(searchable)
+      self[:searchable] = ActionController::Base.helpers.strip_tags(searchable)
     end
 
     def strip_numbers

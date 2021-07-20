@@ -28,11 +28,7 @@ module Searchable
     def set_searchable
       (searchable_index||build_searchable_index).set_searchable_with(
         generate_searchable,
-        strip_fill_words: true,
-        strip_duplicates: true,
-        strip_numbers: true,
-        strip_non_word_boundary: true,
-        strip_special_characters: true
+        **self.class.searchable_strippers.map{|key| [key,true]}.to_h
       )
     end
 
@@ -120,7 +116,7 @@ module Searchable
     module ClassMethods
       attr_writer :searchable_touch_on_indexation, :searchable_indexed,
         :searchable_watch_fields, :searchable_callbacks, :searchable_save_async,
-        :searchable_indexation_inclusions
+        :searchable_indexation_inclusions, :searchable_strippers
 
       def searchable_touch_on_indexation?
         return false if @searchable_touch_on_indexation==false
@@ -148,13 +144,24 @@ module Searchable
         @searchable_indexation_inclusions
       end
 
-      def index_as_searchable(watch_fields: [], save_async: true, touch_on_indexation: true, callbacks: [], indexation_inclusions: nil)
+      def searchable_strippers
+        @searchable_strippers||Searchable.default_strippers
+      end
+
+      def index_as_searchable(
+        watch_fields: [],
+        save_async: true,
+        touch_on_indexation: true,
+        callbacks: [],
+        indexation_inclusions: nil,
+        strippers: nil)
         @searchable_indexed = true
         @searchable_callbacks = callbacks
         @searchable_watch_fields = watch_fields
         @searchable_save_async = save_async
         @searchable_touch_on_indexation = touch_on_indexation
         @searchable_indexation_inclusions = indexation_inclusions
+        @searchable_strippers = strippers
         Searchable::Index.indexed_models << self
         has_one :searchable_index, as: :owner, :dependent => :delete, class_name: 'Searchable::Index'
         after_save :save_searchable

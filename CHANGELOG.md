@@ -17,3 +17,7 @@
 ## [0.5.01] - 2021-07-20
 
 - Added searchable_indexation_inclusions on indexation for configuring method index_all_searchable
+
+## [0.5.03] - 2021-07-20
+
+- Added strippers array on indexation allowing configuration of called strippers per model. Now no compression is done by default.

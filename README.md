@@ -48,7 +48,9 @@ class Movie < ApplicationReord
     watch_fields: [:title, :summary],
     save_async: true,
     touch_on_indexation: true,
-    callbacks: [:actors, :characters]
+    callbacks: [:actors, :characters],
+    strippers: [:strip_downcase, :strip_numbers, :strip_non_word_boundary,
+      :strip_special_characters, :strip_fill_words, :strip_duplicates]
 
   def generate_searchable
     [title, summary, characters.map(&:name), actors.map(&:name)]
@@ -60,28 +62,13 @@ Including `Searchable::Indexation` should only be done along calling `index_as_s
 
 | Option          | Type  | Description |
 |-----------------|-------|-------------|
-| `:watch_fields` | Array | Array of methods/fields on the model that are used in indexation. Changes to these should be watched for. When a watched field changes the searchable value (`searchable_index.searchable`) will be updated. Each field specified should have method like `saved_change_to_#{field}` in order to let searchable know that re-indexation should take place. |
+| `:watch_fields` | Array | Array of methods/fields on the model that are used in indexation. Changes to these should be watched for. When a watched field changes the searchable value (`searchable_index.searchable`) will be updated. Each field specified should have method like `saved_change_to_#{field}?` in order to let searchable know that re-indexation should take place. |
 | `:save_async`   | Boolean | Whether to save `searchable_index` async after save or synchronously along save. Use the latency configuration to set the delay of indexation. Prefer async if the response to an update does not require sending the updated search string along the record. |
 | `:touch_on_indexation` | Boolean | Whether or not an update on `searchable_index` should fire touch (i.e. update) on `updated_at` on its owner. |
 | `:callbacks` | Array | Array of methods that also are indexed as searchable and relates to the model, and should be re-indexed after change. |
+| `:strippers` | Array | Array of symbols contained in the instance method `strippers` on Searchable::Index. Each of these will be called when setting the searchable text. Default strippers may be set globally on `Searchable.default_strippers`. |
 
-The method `generate_searchable` is provided in the `Indexation` module but it is recommended to override it with a custom implementation of what data that should be stored into the searchable string. `generate_searchable` should return either an array of strings (nil is accepted) or a string. The afterwords parsing data into `Searchable::Index` is called with:
-
-```ruby
-# Searchable::Indexation
-def set_searchable
-  (searchable_index||build_searchable_index).set_searchable_with(
-    generate_searchable,
-    strip_fill_words: true,
-    strip_duplicates: true,
-    strip_numbers: true,
-    strip_non_word_boundary: true,
-    strip_special_characters: true
-  )
-end
-```
-
-`set_searchable` may be overridden to customize the compression behaviour. If the generated value is rather large contains numbers, html, symbols etc. you probably want some reduction of the string. Compression will obscure the contents from the original data, which may offend users with a great memory who will no longer be able to find records with exact match to the original string. Thus, if searchable data is rather limited you might want to avoid compression. Providing `generate_searchable` method as above now saves movies with the names of the related characters and actors. The user may now search for a famous actor on movies and get a list of all movies featuring the actor. The `generate_searchable` method is manually linked to `watch_fields` such that a change on title or summary should re-index. The callbacks are set to `:actors` and `:characters` when both models are `indexed_as_searchable`, and their generation includes data from the movie model. Omitting callbacks like this will leave the `Searchable::Index` inconsistent to the underlying data. To re-index all records run:
+The method `generate_searchable` is provided in the `Indexation` module but it is recommended to override it with a custom implementation of what data that should be stored into the searchable string. `generate_searchable` should return either an array of strings (nil is accepted) or a string. The generated string is subset to a list of `strippers` defined in the `index_as_searchable` call, that can be called on the `Searchable::Index` via the `set_searchable` method. If the generated search string is rather large contains numbers, html, symbols etc. you probably want some reduction of the string. Compression will however obscure the contents from the original data, which may offend users with a great memory who will no longer be able to find records with exact match to the original string. Thus, if searchable data is rather limited you might want to avoid compression. Providing `generate_searchable` method as above now saves movies with the names of the related characters and actors. The user may now search for a famous actor on movies and get a list of all movies featuring the actor. The `generate_searchable` method is manually linked to `watch_fields` such that a change on title or summary should re-index. The callbacks are set to `:actors` and `:characters` when both models are `indexed_as_searchable`, and their generation includes data from the movie model. Omitting callbacks like this will leave the `Searchable::Index` inconsistent to the underlying data. To re-index all records run:
 
 ```ruby
 Movie.index_all_searchable

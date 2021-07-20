@@ -4,7 +4,8 @@ class Actor < ApplicationRecord
     watch_fields: [:name, :bio],
     save_async: false,
     touch_on_indexation: true,
-    callbacks: [:movies, :characters]
+    callbacks: [:movies, :characters],
+    strippers: [:compress]
 
   has_many :characters, :dependent => :destroy
   has_many :movies, :through => :characters

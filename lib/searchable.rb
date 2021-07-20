@@ -26,6 +26,7 @@ module Searchable
           mod nok set jeg mig sig fik får få samme for vi nu ind man skal fra
           kunne med enten før ud),
         searchable_limit: 5000,
+        default_strippers: []
       )
     end
 

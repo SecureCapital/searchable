@@ -4,7 +4,8 @@ class Character < ApplicationRecord
     watch_fields: [:name],
     save_async: false,
     touch_on_indexation: true,
-    callbacks: [:movie, :actor]
+    callbacks: [:movie, :actor],
+    strippers: [:compress]
 
   belongs_to :movie, :optional => false
   belongs_to :actor, :optional => false
