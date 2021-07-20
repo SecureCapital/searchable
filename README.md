@@ -98,17 +98,26 @@ As a models has been indexed it can be searched, simply call:
 ```ruby
 # Search for movies starring harrison, or titled 'star wars'
 Movie.joins(:actors).search(title: 'star wars', 'actors.name': 'harrison').distinct.map(&:title)
-  Movie Load (1.2ms)  SELECT DISTINCT `movies`.* FROM `movies` INNER JOIN `characters` ON `characters`.`movie_id` = `movies`.`id` INNER JOIN `actors` ON `actors`.`id` = `characters`.`actor_id` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE '%star%wars%') OR (actors.name COLLATE UTF8MB4_GENERAL_CI LIKE '%harrison%'))
+# SELECT DISTINCT `movies`.* FROM `movies` INNER JOIN `characters` ON
+# `characters`.`movie_id` = `movies`.`id` INNER JOIN `actors` ON `actors`.`id` =
+# `characters`.`actor_id` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE
+# '%star%wars%') OR (actors.name COLLATE UTF8MB4_GENERAL_CI LIKE '%harrison%'))
 => ["Star Wars: Episode IV - A New Hope", "Indiana Jones and the Last Crusade", "Witness"]
 
 # Search for movies titled 'star wars' and starring 'DiCaprio'
 Movie.joins(:actors).search(title: 'star wars', 'actors.name': 'DiCaprio', join: 'AND').count(:all)
-   (1.0ms)  SELECT COUNT(*) FROM `movies` INNER JOIN `characters` ON `characters`.`movie_id` = `movies`.`id` INNER JOIN `actors` ON `actors`.`id` = `characters`.`actor_id` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE '%star%wars%') AND (actors.name COLLATE UTF8MB4_GENERAL_CI LIKE '%DiCaprio%'))
+# SELECT COUNT(*) FROM `movies` INNER JOIN `characters` ON
+# `characters`.`movie_id` = `movies`.`id` INNER JOIN `actors` ON `actors`.`id` =
+# `characters`.`actor_id` WHERE ((title COLLATE UTF8MB4_GENERAL_CI LIKE
+# '%star%wars%') AND (actors.name COLLATE UTF8MB4_GENERAL_CI LIKE '%DiCaprio%'))
 => 0
 
 # Search for movies having searchable text like 'DiCaprio'
 Movie.with_searchable.search(searchable: 'DiCaprio').map(&:searchable)
- Movie Load (0.5ms)  SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%DiCaprio%'))
+# SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM
+# `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` =
+# `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE
+# ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%DiCaprio%'))
 => ["inception thief who steals corporate secrets through use dream-sharing technology given inverse task planting idea into mind ceo. cobb arthur ariande leonardo dicaprio joseph gordon-levit ellen page"]
 
 # Search for movies having a title starting with star
@@ -120,7 +129,9 @@ To search a model without indexing it as searchable you may extend `Searchable::
 
 ```ruby
 Searchable::Index.search(searchable: '%harrison ford%', fuzzy: false).pluck(:owner_type,:owner_id)
-  (1.2ms)  SELECT `searchable_indices`.`owner_type`, `searchable_indices`.`owner_id` FROM `searchable_indices` WHERE ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%harrison ford%'))
+# SELECT `searchable_indices`.`owner_type`, `searchable_indices`.`owner_id` FROM
+# `searchable_indices` WHERE ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE
+# '%harrison ford%'))
 => [["Movie", 1], ["Movie", 2], ["Movie", 3], ["Actor", 1], ["Actor", 6], ["Actor", 7], ["Character", 1], ["Character", 4], ["Character", 7]]
 ```
 
@@ -173,7 +184,13 @@ conditions:
   call:
     "where(params[:where]).where.not(params[:where_not]).or(model.where(params[:or]).where.not(params[:or_not]))"
   description:
-    'Common where conditions. The user may only place conditions on fields given in the _filters rule. The sanitizer will try to convert the received values to type defined in the ruleset. Failure to convert will raise an exception. disallowed fields will be ignored and not raise an exception. If the user is not permitted to collect all records, which has been implemented with a where(...) query, it is essential to disallow `or` and `or_not` params as these will grant access to the disallowed data.'
+    'Common where conditions. The user may only place conditions on fields given
+    in the _filters rule. The sanitizer will try to convert the received values
+    to type defined in the ruleset. Failure to convert will raise an exception.
+    disallowed fields will be ignored and not raise an exception. If the user is
+    not permitted to collect all records, which has been implemented with a
+    where(...) query, it is essential to disallow `or` and `or_not` params as
+    these will grant access to the disallowed data.'
 
 fields:
   params:
@@ -184,7 +201,8 @@ fields:
   call:
     "select(params[:fields])"
   description:
-    'Useful for reducing the amount of data or collecting associated data. Trying to fetch disallowed fields do not raise an exception.'
+    'Useful for reducing the amount of data or collecting associated data.
+    Trying to fetch disallowed fields do not raise an exception.'
 
 order:
   params:
@@ -204,7 +222,9 @@ pagination:
   call:
     "limit(params[:limit]).offset(params[:offset])"
   description:
-    'For restricting amount of records collected and server sided pagination. The user may set both offset and page, but one is sufficient. Setting page automatically defines the offset.'
+    'For restricting amount of records collected and server sided pagination.
+    The user may set both offset and page, but one is sufficient. Setting page
+    automatically defines the offset.'
 
 search:
   params:
@@ -219,7 +239,9 @@ search:
   call:
     'search(**kwargs, join: join, fuzzy: fuzzy)'
   description:
-    "See searching above. Note that data is flat, thus field_names fuzzy, join, and with_having may never be searched! searching with {default: 'string'} will be converted to {_default_search_field => 'string'}."
+    "See searching above. Note that data is flat, thus field_names fuzzy, join,
+    and with_having may never be searched! searching with {default: 'string'}
+    will be converted to {_default_search_field => 'string'}."
 
 tagging:
   params:
@@ -343,8 +365,16 @@ Now a request on the index action will form results like:
 ```ruby
 get 'movies', {:q=>{:where=>{:rental_price=>"0..200"}, :search=>{:default=>"droid"}}}
 =>
-SELECT COUNT(*) FROM `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%droid%')) AND `movies`.`rental_price` BETWEEN 0.0 AND 200.0
-SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%droid%')) AND `movies`.`rental_price` BETWEEN 0.0 AND 200.0 LIMIT 1000
+# SELECT COUNT(*) FROM `movies` LEFT JOIN `searchable_indices` ON
+# `searchable_indices`.`owner_id` = `movies`.`id` AND
+# `searchable_indices`.`owner_type` = 'Movie' WHERE ((searchable COLLATE
+# UTF8MB4_GENERAL_CI LIKE '%droid%')) AND `movies`.`rental_price` BETWEEN 0.0
+# AND 200.0
+# SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM
+# `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` =
+# `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE
+# ((searchable COLLATE UTF8MB4_GENERAL_CI LIKE '%droid%')) AND
+# `movies`.`rental_price` BETWEEN 0.0 AND 200.0 LIMIT 1000
 {
   :data => [...]
   :count => 1,
@@ -364,9 +394,13 @@ To configure searchable see `searchable.rb` and `searchable/query_interface.rb` 
 
 Searchable.configure do |config|
   config.collate_function = "UTF8_BIN"
-  coinfig.locale = "fr" # Database locale, what language data is written in
+  # Database locale, what language data is written in
+  coinfig.locale = "fr"
   fill_words_fr = %w(oui)
-  searchable_limit = 65535 # use standard text limit on searchable_indices.searchbale, set this before generating installation
+  # use standard text limit on searchable_indices.searchable, set this before
+  # generating installation
+  searchable_limit = 65535
+
 end
 
 Searchable::QueryInterface.configure do |config|
