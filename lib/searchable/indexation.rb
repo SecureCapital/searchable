@@ -148,12 +148,13 @@ module Searchable
         @searchable_indexation_inclusions
       end
 
-      def index_as_searchable(watch_fields: [], save_async: true, touch_on_indexation: true, callbacks: [])
+      def index_as_searchable(watch_fields: [], save_async: true, touch_on_indexation: true, callbacks: [], indexation_inclusions: nil)
         @searchable_indexed = true
         @searchable_callbacks = callbacks
         @searchable_watch_fields = watch_fields
         @searchable_save_async = save_async
         @searchable_touch_on_indexation = touch_on_indexation
+        @indexation_inclusions = indexation_inclusions
         Searchable::Index.indexed_models << self
         has_one :searchable_index, as: :owner, :dependent => :delete, class_name: 'Searchable::Index'
         after_save :save_searchable
