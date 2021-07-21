@@ -170,7 +170,7 @@ module Searchable
 
       def index_all_searchable(of: 50)
         if searchable_indexed?
-          includers = [:searchable_index]||(searchable_indexation_inclusions||searchable_callbacks)
+          includers = [:searchable_index]+(searchable_indexation_inclusions||searchable_callbacks)
           includes(*includers).in_batches(of: of).each do |batch|
             batch.each do |record|
               record.set_searchable
