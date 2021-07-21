@@ -17,7 +17,7 @@ module Searchable
     end
 
     def searchable
-      return attributes['searchable'] if attributes.keys.incude?('searchable')
+      return attributes['searchable'] if attributes.keys.include?('searchable')
       si = searchable_index || build_searchable_index
       set_searchable unless si.searchable
       si.searchable
