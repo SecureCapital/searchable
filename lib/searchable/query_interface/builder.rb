@@ -61,7 +61,7 @@ module Searchable::QueryInterface
 			q = "chain"
 			q << ".select(*fields)" if fields
 			q << ".search(**search)" if searchable? && search
-			q << ".where('`updated_at` > #{updated_at}')" if updated_at
+			q << ".where('`#{chain.table_name}`.`updated_at` > ?': updated_at)" if updated_at
 			q << ".where(where)" if where
 			q << ".where.not(where_not)" if where_not
 			q << ".or(chain#{fields ? '.select(*fields)':''}.where(xor).where.not(or_not))" if (where || where_not) && xor && xor_not

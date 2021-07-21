@@ -1,3 +1,3 @@
 module Searchable
-  VERSION = '0.5.07'
+  VERSION = '0.5.08'
 end

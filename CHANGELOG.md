@@ -38,3 +38,7 @@
 ## [0.5.07] - 2021-07-21
 
 - Corrected spelling mistake
+
+## [0.5.08] - 2021-07-21
+
+- Changed updated_at call in builder
