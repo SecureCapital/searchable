@@ -82,8 +82,8 @@ module Searchable
     ##
 
     def touch_owner
-      if saved_changes? && owner_type.constantize.searchable_touch_on_indexation?
-        owner.update_attribute(:updated_at, updated_at)
+      if saved_changes? && owner.class.searchable_touch_on_indexation?
+        owner.update_column(:updated_at, updated_at)
       end
     end
 
