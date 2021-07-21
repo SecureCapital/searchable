@@ -30,3 +30,7 @@
 ## [0.5.05] - 2021-07-21
 
 - limitation on searchable attribute corrected
+
+## [0.5.06] - 2021-07-21
+
+- Corrected sti behaviour in indexation, base_class name is always set in Searchable::Index 

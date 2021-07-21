@@ -17,7 +17,7 @@ module Searchable
     end
 
     def searchable
-      return attributes['searchable'] if attributes['searchable']
+      return attributes['searchable'] if attributes.keys.incude?('searchable')
       si = searchable_index || build_searchable_index
       set_searchable unless si.searchable
       si.searchable
@@ -194,12 +194,7 @@ module Searchable
       end
 
       def join_searchable_index
-        table_type = if column_names.include?('type')
-          "`#{table_name}`.`type`"
-        else
-          "'#{name}'"
-        end
-        joins("LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `#{table_name}`.`id` AND `searchable_indices`.`owner_type` = #{table_type}")
+        joins("LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `#{table_name}`.`id` AND `searchable_indices`.`owner_type` = #{base_class.name}")
       end
 
       def with_searchable
