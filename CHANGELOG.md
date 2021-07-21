@@ -33,4 +33,8 @@
 
 ## [0.5.06] - 2021-07-21
 
-- Corrected sti behaviour in indexation, base_class name is always set in Searchable::Index 
+- Corrected sti behaviour in indexation, base_class name is always set in Searchable::Index
+
+## [0.5.07] - 2021-07-21
+
+- Corrected spelling mistake
