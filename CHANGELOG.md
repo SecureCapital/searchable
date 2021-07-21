@@ -42,3 +42,7 @@
 ## [0.5.08] - 2021-07-21
 
 - Changed updated_at call in builder
+
+## [0.5.09] - 2021-07-21
+
+- Changed updated_at using rails default to ensure right time conversion and column naming
