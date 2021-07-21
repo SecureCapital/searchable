@@ -194,7 +194,7 @@ module Searchable
       end
 
       def join_searchable_index
-        joins("LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `#{table_name}`.`id` AND `searchable_indices`.`owner_type` = #{base_class.name}")
+        joins("LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `#{table_name}`.`id` AND `searchable_indices`.`owner_type` = '#{base_class.name}'")
       end
 
       def with_searchable
