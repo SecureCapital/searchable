@@ -89,7 +89,7 @@ module Searchable
 
     def limit_searchable
       limit = self.class.columns_hash.find{|field,addapter| field=='searchable'}.last.limit
-      attributes['searchable']=attributes['searchable'][0..(limit-1)]
+      self[:searchable]=self[:searchable][0..(limit-1)]
     end
 
     class << self

@@ -21,3 +21,12 @@
 ## [0.5.03] - 2021-07-20
 
 - Added strippers array on indexation allowing configuration of called strippers per model. Now no compression is done by default.
+
+## [0.5.04] - 2021-07-21
+
+- Corrected mistake in indexation, index_all_searchable, includers
+- Searchable::Index#touch_owner uses the class of the owner rather than type
+
+## [0.5.05] - 2021-07-21
+
+- limitation on searchable attribute corrected
