@@ -12,6 +12,7 @@ module Searchable
       @klass          = opts[:klass] if opts[:klass]
       @callback       = opts[:callback] if opts[:callback]
       @call           = opts[:call]
+      send(opts[:call])
     end
 
     def set_searchable
