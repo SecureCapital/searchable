@@ -94,7 +94,7 @@ module Searchable
         Searchable::IndexWorker.perform_in(
           Searchable.latency.seconds,
           id: record.id,
-          klass: item.class.name,
+          klass: record.class.name,
           call: "set_searchable"
         )
       end
