@@ -26,7 +26,7 @@ module Searchable
       if @id && @klass && @callback && item
         array = item.send(@callback)
         array = [array] unless array.respond_to?(:map)
-        array.each do |record|
+        array.compact.each do |record|
           self.class.perform_async(call: :set_searchable, id: record.id, klass: record.class.name)
         end
       end
