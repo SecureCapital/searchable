@@ -37,9 +37,7 @@ module Searchable
     end
 
     def index_klass
-      if @klass
-        klass.constantize.index_all_searchable
-      end
+      @klass.constantize.index_all_searchable if @klass
     end
 
     def index_klasses
