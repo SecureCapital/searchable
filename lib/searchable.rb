@@ -18,7 +18,7 @@ module Searchable
         fill_words_en: %w(a an and any are as at be by can can't cant for from hers
           his if in is its may not of often on one or such tehir the then there
           these this those thus to two which whose ie eg i.e. e.g. it's),
-        fill_words_da: %w(er i hvor der den det deres hendes hans hende ham hun
+        fill_words_da: %w(er i hvor der den det deres hendes hende ham hun
           hvor hvorfor derfor hvorledes herfor således og samt dels mit min dit
           dem hvormed har på ved også til her at en et han ikke over disse blot
           de fordi af ad noget nogle kan vil ville have men da som idet fx feks
