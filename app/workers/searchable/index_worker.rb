@@ -6,6 +6,8 @@ module Searchable
     include ::Sidekiq::Worker
     include ::Sidekiq::Symbols
     sidekiq_options queue: 'searchable'
+    attr_accessor :id, :klass, :callback, :call
+    attr_writer :item
 
     def perform(opts={})
       @id             = opts[:id] if opts[:id]

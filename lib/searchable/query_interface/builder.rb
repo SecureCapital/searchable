@@ -29,7 +29,8 @@ module Searchable::QueryInterface
 				count: count,
 				limit: limit,
 				page: page,
-				offset: offset
+				offset: offset,
+        with_searchable: with_searchable?,
 			}
 		end
 
@@ -57,9 +58,38 @@ module Searchable::QueryInterface
 			chain.respond_to?(:search)
 		end
 
+    def with_searchable?
+      searchable? &&
+      chain.respond_to?(:with_searchable) &&
+      chain.respond_to?(:searchable_key_list) &&
+      fields &&
+      (fields&chain.searchable_key_list).any?
+    end
+
+    def searchable_key_list
+      if chain.respond_to?(:searchable_key_list)
+        chain.searchable_key_list
+      else
+        [
+          :searchable,
+          'searchable',
+          '`serachable`',
+          "searchable_indices.searchable",
+          "searchable_indices.searchable as searchable",
+          "`searchable_indices`.`searchable`",
+          '`searchable_indices`.`searchable` as `searchable`',
+        ]
+      end
+    end
+
+    def fields_without_searchable
+      (fields||[])-searchable_key_list
+    end
+
 		def base_chain
 			q = "chain"
-			q << ".select(*fields)" if fields
+      q << ".with_searchable(fields_without_searchable)" if with_searchable?
+      q << ".select(*fields)" if fields && !with_searchable?
 			q << ".search(**search)" if searchable? && search
 			q << ".where(updated_at: updated_at..Date::Infinity.new)" if updated_at
 			q << ".where(where)" if where

@@ -197,15 +197,28 @@ module Searchable
         joins("LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` = `#{table_name}`.`id` AND `searchable_indices`.`owner_type` = '#{base_class.name}'")
       end
 
-      def with_searchable
-        select("`#{table_name}`.*", '`searchable_indices`.`searchable` as `searchable`').join_searchable_index
+      def with_searchable(*args)
+        select(args << '`searchable_indices`.`searchable` as `searchable`').join_searchable_index
+      end
+
+      def searchable_key_list
+        [
+          'searchable',
+          :searchable,
+          "#{table_name}.searchable",
+          '`searchable`',
+          "`#{table_name}`.`searchable`",
+          "searchable_indices.searchable",
+          "searchable_indices.searchable as searchable",
+          "`searchable_indices`.`searchable`",
+          '`searchable_indices`.`searchable` as `searchable`',
+        ]
       end
 
       ## Serach by columns with collate
       # Give argument join: {'OR'/'AND'} if strings shuold match in either or
       # all columns. Place wildcards % in the string, before or/and after.
       # Or just  use the fuzzy oprion to place wilcards all around
-
       def search(join: 'OR', with_having: false, fuzzy: true, **args)
         args = args.select{|k,v| v&&v.is_a?(String)&&!v.blank? }
         args = args.map do |k,v|
@@ -220,10 +233,17 @@ module Searchable
           q = args.map do |field, argument|
             "(#{field} COLLATE #{Searchable.collate_function} LIKE '#{argument}')"
           end.join(" #{join} ")
-          if with_having
-            having(q)
+
+          prefix = if searchable_indexed? && (args.to_h.keys&searchable_key_list).any?
+            join_searchable_index
           else
-            where(q)
+            self
+          end
+
+          if with_having
+            prefix.having(q)
+          else
+            prefix.where(q)
           end
         end
       end

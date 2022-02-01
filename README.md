@@ -100,7 +100,7 @@ Movie.joins(:actors).search(title: 'star wars', 'actors.name': 'DiCaprio', join:
 => 0
 
 # Search for movies having searchable text like 'DiCaprio'
-Movie.with_searchable.search(searchable: 'DiCaprio').map(&:searchable)
+Movie.search(searchable: 'DiCaprio').map(&:searchable)
 # SELECT `movies`.*, `searchable_indices`.`searchable` as `searchable` FROM
 # `movies` LEFT JOIN `searchable_indices` ON `searchable_indices`.`owner_id` =
 # `movies`.`id` AND `searchable_indices`.`owner_type` = 'Movie' WHERE
@@ -330,7 +330,7 @@ class MoviesController < ApplicationController
   end
 
   def chain
-    Movie.with_searchable
+    Movie
   end
 
   def index
