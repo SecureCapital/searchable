@@ -5,7 +5,7 @@
 module Searchable::QueryInterface
 	class Builder
 		attr_accessor :chain, :limit, :page, :offset, :fields, :search,
-			:tagged, :order, :updated_at, :where, :where_not, :xor, :xor_not
+			:tagged, :order, :updated_at, :where, :where_not, :xor, :xor_not, :includers
 
 		def self.call(**args)
 			inst = new(**args)
@@ -88,6 +88,7 @@ module Searchable::QueryInterface
 
 		def base_chain
 			q = "chain"
+      q << ".includes(includers)" if includers
       q << ".with_searchable(fields_without_searchable)" if with_searchable?
       q << ".select(*fields)" if fields && !with_searchable?
 			q << ".search(**search)" if searchable? && search
