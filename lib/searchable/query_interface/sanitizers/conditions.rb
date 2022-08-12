@@ -4,14 +4,15 @@ module Searchable::QueryInterface
 			attr_writer :_filters, :_allow_xor, :_allow_xor_not
 			attr_reader :_filters, :where, :where_not, :xor, :xor_not
 
-			# :_filters => {
-			# 	:issue_id => {
-			# 		:type => :integer/:numeric/:boolean/:string/:date/:datetime,
-			# 		:is_array => Boolean,
-			# 		:is_range => Bollean
-			# 	},
-			# 	...
-			# }
+      # :_filters => {
+      # 	:issue_id => {
+      # 		:type => :integer/:numeric/:boolean/:string/:date/:datetime,
+      # 		:is_array => Boolean,
+      # 		:is_range => Boolean
+      # 		:is_relatyion => Boolean
+      # 	},
+      # 	...
+      # }
 
 			def _allow_xor
 				if @_allow_xor == false
@@ -66,6 +67,8 @@ module Searchable::QueryInterface
 							set_array(v)
 						elsif rule[:is_range]
 							set_range(v)
+						elsif rule[:is_relation]
+							set_relation(v, k, rule)
 						else
 							set_value(v)
 						end
@@ -86,6 +89,28 @@ module Searchable::QueryInterface
 					set_value(v)
 				end.uniq
 			end
+
+			
+      def set_relation(relation, value, rule)
+				unless value.respond_to?(:map) || value.respond_to?(:to_a)
+					return set_value(value)
+				end
+				values = convert_with_exception(value, :array, "Array") do
+					value.to_a
+				end
+				return nil if values.blank?
+
+        vals = values.map do |v|
+          set_value(v)
+        end.uniq
+
+        # Attemt to constantize relation model
+        relation_model = rule[:model].to_s.singularize.camelcase.constantize
+        
+          
+        relation_model.where(rule[:related_field].to_s => vals)
+			end
+
 
 			def set_range(value)
 				return nil if value.blank?
