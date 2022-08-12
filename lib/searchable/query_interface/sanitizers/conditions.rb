@@ -91,7 +91,7 @@ module Searchable::QueryInterface
 			end
 
 			
-      def set_relation(relation, value, rule)
+      def set_relation(value, relation, rule)
 				unless value.respond_to?(:map) || value.respond_to?(:to_a)
 					return set_value(value)
 				end
