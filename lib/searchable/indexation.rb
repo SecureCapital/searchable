@@ -35,7 +35,7 @@ module Searchable
     # Do override this function with custom string generation, but ensure to
     # map it to the searchable_watch_fields
     def generate_searchable
-      self.class.searchable_columns.map{|field| send(field)}.comapct.map(&:to_s)
+      self.class.searchable_columns.map{|field| send(field)}.compact.map(&:to_s)
     end
 
     def save_searchable
