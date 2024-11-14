@@ -1,8 +1,8 @@
 module Searchable::QueryInterface
 	module Sanitizers
-		class Conditions < Base
-			attr_writer :_filters, :_allow_xor, :_allow_xor_not
-			attr_reader :_filters, :where, :where_not, :xor, :xor_not
+    class Conditions < Base
+      attr_writer :_filters, :_allow_xor, :_allow_xor_not
+      attr_reader :_filters, :where, :where_not, :xor, :xor_not
 
       # :_filters => {
       # 	:issue_id => {
@@ -14,13 +14,13 @@ module Searchable::QueryInterface
       # 	...
       # }
 
-			def _allow_xor
-				if @_allow_xor == false
-					false
-				else
-					true
-				end
-			end
+      def _allow_xor
+        if @_allow_xor == false
+          false
+        else
+          true
+        end
+      end
 
 			def _allow_xor_not
 				if @_allow_xor_not == false
@@ -81,10 +81,15 @@ module Searchable::QueryInterface
 				unless value.respond_to?(:map) || value.respond_to?(:to_a)
 					return set_value(value)
 				end
-				values = convert_with_exception(value, :array, "Array") do
-					value.to_a
-				end
+				values =
+          convert_with_exception(value, :array, "Array") do
+            value.to_a
+          end
+
+        values = values.flatten.reject { |v| v.is_a?(Symbol) }
+        
 				return nil if values.blank?
+
 				values.map do |v|
 					set_value(v)
 				end.uniq
