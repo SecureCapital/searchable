@@ -94,7 +94,11 @@ module Searchable::QueryInterface
 			q << ".search(**search)" if searchable? && search
 			q << ".where(updated_at: updated_at..Date::Infinity.new)" if updated_at
 			q << ".where(where)" if where
-			q << ".where.not(where_not)" if where_not
+      if where_not
+        where_not.each do |k,v|
+          q << ".where.not(#{k}: #{ v ? v : 'nil' })"
+        end
+      end
 			q << ".or(chain#{fields ? '.select(*fields)':''}.where(xor).where.not(or_not))" if (where || where_not) && xor && xor_not
 			q << ".or(chain#{fields ? '.select(*fields)':''}.where(xor))" if (where || where_not) && xor && !xor_not
 			q << ".or(chain#{fields ? '.select(*fields)':''}.where.not(xor_not))" if (where || where_not) && xor_not && !xor
